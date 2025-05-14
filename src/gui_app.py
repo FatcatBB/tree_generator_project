@@ -8,7 +8,7 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 class TreeGeneratorApp:
     def __init__(self, master):
         self.master = master
-        master.title("文件树生成器 v3.1")
+        master.title("文件树生成器 v4.0")
         master.geometry("1200x800")
 
         # 初始化所有变量
@@ -219,7 +219,15 @@ class TreeGeneratorApp:
 
             # 提取条目信息
             is_dir = line.endswith("/")
-            name = line.replace("├──", "").replace("└──", "").strip()
+            name_part = line.replace("├──", "").replace("└──", "").strip()
+
+            # 修复点：必须先处理注释再初始化name变量
+            # 步骤1. 去除注释
+            clean_name = re.sub(r"\s+([#//;%]|/\*|<!--).*$", "", name_part).strip()
+            # 步骤2. 过滤非法字符
+            clean_name = re.sub(r'[\\/*?:"<>|]', "", clean_name)
+            # 步骤3. 去除首尾特殊符号
+            name = clean_name.strip(" _-").rstrip(".")  # 合并操作
 
             # 维护缩进栈
             while indent <= stack[-1][0]:
