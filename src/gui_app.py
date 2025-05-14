@@ -8,7 +8,7 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 class TreeGeneratorApp:
     def __init__(self, master):
         self.master = master
-        master.title("文件树生成器 v3.0")
+        master.title("文件树生成器 v3.1")
         master.geometry("1200x800")
 
         # 初始化所有变量
@@ -36,9 +36,9 @@ class TreeGeneratorApp:
         # 第一行按钮
         top_controls = ttk.Frame(left_controls)
         top_controls.pack(fill=tk.X)
-        ttk.Button(top_controls, text="选择目录", command=self.select_directory).pack(
-            side=tk.LEFT
-        )
+        ttk.Button(
+            top_controls, text="选择目标文件夹", command=self.select_directory
+        ).pack(side=tk.LEFT)
         ttk.Button(top_controls, text="保存位置", command=self.select_save_path).pack(
             side=tk.LEFT, padx=5
         )
@@ -74,7 +74,7 @@ class TreeGeneratorApp:
         self.tree_text.pack(fill=tk.BOTH, expand=True)
 
         # 右半区 - 反向生成
-        right_frame = ttk.LabelFrame(main_frame, text="反向生成文件结构")
+        right_frame = ttk.LabelFrame(main_frame, text="通过文件树生成文件结构")
         right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=5)
 
         # 右侧控制栏
@@ -82,7 +82,7 @@ class TreeGeneratorApp:
         right_controls.pack(fill=tk.X, pady=5)
 
         ttk.Button(
-            right_controls, text="生成根目录", command=self.select_create_root
+            right_controls, text="选择生成位置", command=self.select_create_root
         ).pack(side=tk.LEFT)
         self.create_path_label = ttk.Label(right_controls, text=self.create_path)
         self.create_path_label.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
@@ -183,7 +183,7 @@ class TreeGeneratorApp:
 
     # 右侧功能方法
     def select_create_root(self):
-        """选择生成根目录"""
+        """选择生成位置"""
         path = filedialog.askdirectory(initialdir=self.create_path)
         if path:
             self.create_path = path
