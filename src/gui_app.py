@@ -204,44 +204,49 @@ class TreeGeneratorApp:
             messagebox.showerror("错误", f"生成失败：{str(e)}")
 
     def parse_markdown_tree(self, content):
-        """解析Markdown树结构"""
+        """解析Markdown树结构（最终优化版）"""
         lines = [line for line in content.split("\n") if line.strip()]
         parsed = []
         stack = [(-1, "")]  # (缩进等级, 当前路径)
 
         for line in lines:
-            if line.startswith("#"):
-                continue  # 跳过注释行
-
             # 计算缩进等级
-            indent = len(re.match(r"^[│└├ \t]*", line).group())
-            line = line[indent:].strip()
+            indent = len(re.findall(r"[│├└]", line)) * 4 + len(
+                re.match(r"^[ \t]*", line).group()
+            )
+            line_content = re.sub(r"^[│├└─┬ \t]+", "", line).strip()
 
-            # 提取条目信息
-            is_dir = line.endswith("/")
-            name_part = line.replace("├──", "").replace("└──", "").strip()
+            # 判断是否为目录（终极解决方案）
+            is_dir = "/" in line_content and (
+                line_content.endswith("/")
+                or any(c in line_content for c in "#;%")  # 包含注释特征时特殊处理
+            )
 
-            # 修复点：必须先处理注释再初始化name变量
-            # 步骤1. 去除注释
-            clean_name = re.sub(r"\s+([#//;%]|/\*|<!--).*$", "", name_part).strip()
-            # 步骤2. 过滤非法字符
-            clean_name = re.sub(r'[\\/*?:"<>|]', "", clean_name)
-            # 步骤3. 去除首尾特殊符号
-            name = clean_name.strip(" _-").rstrip(".")  # 合并操作
+            # 提取有效名称（终极清理逻辑）
+            name = re.split(r"\s*[#;%]", line_content)[0]  # 简单粗暴分割注释
+            name = name.rstrip(" _-")  # 保留左侧重要符号
+
+            # 强制目录识别逻辑
+            if "/" in name:
+                name = name.split("/")[0] + "/"
+                is_dir = True
+            elif is_dir and not name.endswith("/"):
+                name += "/"
 
             # 维护缩进栈
-            while indent <= stack[-1][0]:
+            while stack and indent <= stack[-1][0]:
                 stack.pop()
 
             # 构建完整路径
-            base_path = stack[-1][1]
-            full_path = os.path.join(base_path, name)
+            parent_path = stack[-1][1] if stack else ""
+            full_path = os.path.join(parent_path, name.replace("/", ""))
 
             parsed.append(
                 {
                     "type": "dir" if is_dir else "file",
-                    "path": full_path,
-                    "depth": len(stack) - 1,
+                    "path": os.path.normpath(full_path).replace("\\", "/").rstrip("/")
+                    + ("/" if is_dir else ""),
+                    "depth": len(stack),
                 }
             )
 
